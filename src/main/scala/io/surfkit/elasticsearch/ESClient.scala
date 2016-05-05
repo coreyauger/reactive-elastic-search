@@ -121,6 +121,12 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     api[ES.Search](req)
   }
 
+  def searchLite(index: String = "", `type`: String = "", query: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.Search] = {
+    val uri = List(index, `type`, "_search").mkString("/","/","") + queryString(params + ("q" -> query))
+    val req = mkRequest(RequestBuilding.Get, uri, "", params)
+    api[ES.Search](req)
+  }
+
   // TODO: what about custom mappings...
   // https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html
   def indexJs(index: String, `type`: String, id: String, json: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] =

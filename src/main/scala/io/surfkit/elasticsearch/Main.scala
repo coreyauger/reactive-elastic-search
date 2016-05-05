@@ -27,7 +27,7 @@ object Main extends App{
     println("create client")
     val client = new ESClient()
 
-    client.indexJs("test","raw", UUID.randomUUID().toString, Json.obj(
+    /*client.indexJs("test","raw", UUID.randomUUID().toString, Json.obj(
       "author" -> "Corey Auger",
       "date" -> "Aug 2 2015",
       "text" -> "This is some basic text that we are going to use to test."
@@ -38,7 +38,7 @@ object Main extends App{
 
     client.delete("test","raw").map{response =>
       println(response)
-    }.recover(ESClient.reportFailure)
+    }.recover(ESClient.reportFailure)*/
     /*client.analyze(text = "This is the biggest bad test around.").map{ r =>
       println(r)
     }.recover(ESClient.reportFailure)
@@ -54,16 +54,16 @@ object Main extends App{
     client.request(HttpRequest(uri = "/_cluster/health?pretty&wait_for_status=green&timeout=5s")).foreach{ response =>
       println(response)
     }*/
-   /* client.search( body = Json.obj(
+    client.search( body = Json.obj(
       "query" -> Json.obj(
         "match" -> Json.obj(
-          "text" -> "test"
+          "content" -> "fuck"
         )
       )
     )).map{ response =>
       println(response)
     }.recover(ESClient.reportFailure)
-*/
+
 
 
     val bulk = ES.Bulk.Request(
@@ -87,9 +87,9 @@ object Main extends App{
 
     println(ES.Bulk.FormatJson(bulk))
 
-    client.bulk("test","raw",bulk).map{ response =>
+    /*client.bulk("test","raw",bulk).map{ response =>
       println(response)
-    }.recover(ESClient.reportFailure)
+    }.recover(ESClient.reportFailure)*/
   }
 
 }
