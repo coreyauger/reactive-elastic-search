@@ -27,6 +27,10 @@ object ES {
   implicit val healthWrites = Json.writes[Health]
   implicit val healthReads = Json.reads[Health]
 
+  case class Ack(acknowledged:Boolean) extends ESResponse
+  implicit val ackWrites = Json.writes[Ack]
+  implicit val ackReads = Json.reads[Ack]
+
   trait IndexBase extends ESResponse{
     def _index: String
     def _type: String

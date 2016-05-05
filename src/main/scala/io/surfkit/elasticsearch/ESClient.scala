@@ -126,11 +126,25 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   def indexJs(index: String, `type`: String, id: String, json: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] =
     this.index(index, `type`, id, json.toString, params)
 
+  def index(index: ES.Index, json: JsValue, params: Map[String, String]):Future[ES.IndexCreate] =
+    this.index(index._index, index._type, index._id, json.toString, params)
+
   def index(index: String, `type`: String, id: String, json: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] = {
     val uri = List(index, `type`, id).mkString("/","/","")
     val req = mkRequest(RequestBuilding.Put, uri, json, params)
     api[ES.IndexCreate](req)
   }
+
+
+  def delete(index: ES.Index, params: Map[String, String]):Future[ES.Ack] =
+    this.delete(index._index, index._type, index._id, params)
+
+  def delete(index: String, `type`: String = "", id: String = "", params: Map[String, String] = Map.empty[String, String]):Future[ES.Ack] = {
+    val uri = List(index, `type`, id).mkString("/","/","")
+    val req = mkRequest(RequestBuilding.Delete, uri, "", params)
+    api[ES.Ack](req)
+  }
+
 
   def analyze(analyzer: String = "standard", text: String, params: Map[String, String] = Map.empty[String, String]): Future[ES.Tokens] =
     api[ES.Tokens](HttpRequest(uri = s"/_analyze${queryString(params ++ Map("analyzer" -> analyzer, "text" -> text))}"))

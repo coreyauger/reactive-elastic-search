@@ -27,14 +27,18 @@ object Main extends App{
     println("create client")
     val client = new ESClient()
 
-    /*client.indexJs("test","raw", UUID.randomUUID().toString, Json.obj(
+    client.indexJs("test","raw", UUID.randomUUID().toString, Json.obj(
       "author" -> "Corey Auger",
       "date" -> "Aug 2 2015",
       "text" -> "This is some basic text that we are going to use to test."
     )).map{response =>
       println(response)
-    }.recover(ESClient.reportFailure)*/
+    }.recover(ESClient.reportFailure)
 
+
+    client.delete("test","raw").map{response =>
+      println(response)
+    }.recover(ESClient.reportFailure)
     /*client.analyze(text = "This is the biggest bad test around.").map{ r =>
       println(r)
     }.recover(ESClient.reportFailure)
