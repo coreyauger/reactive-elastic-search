@@ -112,7 +112,36 @@ object ES {
     case class BooleanVal(value: Boolean) extends Val
 
     sealed trait QueryBase
-    case class TermQuery(name: String, value:Val, boost: Option[Double]) extends QueryBase
+    sealed trait FieldQuery extends QueryBase{
+      def name: String
+    }
+    case class TermQuery(name: String, value:Val, boost: Option[Double]) extends FieldQuery
+    // TODO: index options
+    // https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html
+    case class TermsQuery(name: String, values:Seq[Val], boost: Option[Double]) extends FieldQuery
+    case class RangeOp(op: String)
+    object RangeOp{
+      val gte = RangeOp("gte")
+      val gt = RangeOp("gte")
+      val lte = RangeOp("gte")
+      val lt = RangeOp("gte")
+    }
+    case class RangeQuery(name: String, rang:Set[RangeOp], value:Val, boost: Option[Double]) extends FieldQuery
+    case class ExistsQuery(name: String, value:Val, boost: Option[Double]) extends FieldQuery
+    case class PrefixQuery(name: String, value:Val, boost: Option[Double]) extends FieldQuery
+    case class WildCardQuery(name: String, value:String, boost: Option[Double]) extends FieldQuery
+    case class RegExFlag(flag: String)
+    object RegExFlag{
+      val ALL = RegExFlag("ALL")
+      val ANYSTRING = RegExFlag("ANYSTRING")
+      val COMPLEMENT = RegExFlag("COMPLEMENT")
+      val EMPTY = RegExFlag("EMPTY")
+      val INTERSECTION = RegExFlag("INTERSECTION")
+      val INTERVAL = RegExFlag("INTERVAL")
+      val NONE = RegExFlag("NONE")
+    }
+    case class RegExQuery(name: String, value:String, flags:Set[RegExFlag], boost: Option[Double]) extends FieldQuery
+
 
     case class Clause(clause: String)
     object Clause{

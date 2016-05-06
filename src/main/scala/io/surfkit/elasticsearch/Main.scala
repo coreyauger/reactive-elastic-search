@@ -57,7 +57,7 @@ object Main extends App{
     client.search( body = Json.obj(
       "query" -> Json.obj(
         "match" -> Json.obj(
-          "content" -> "fuck"
+          "content" -> "test"
         )
       )
     )).map{ response =>
