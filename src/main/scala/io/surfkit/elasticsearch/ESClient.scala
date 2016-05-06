@@ -49,10 +49,10 @@ object ESClient{
   }
 }
 
-class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[ActorRef] = None) {
+class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[ActorRef] = None, implicit val system: ActorSystem = ActorSystem()) {
   import ES._
 
-  implicit val system = ActorSystem()
+
   implicit val materializer = ActorMaterializer()
 
   private[this] val poolClientFlow = Http().cachedHostConnectionPool[Promise[HttpResponse]](host = host, port = port)

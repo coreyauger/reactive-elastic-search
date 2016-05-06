@@ -5,6 +5,7 @@ import java.util.UUID
 import akka.http.scaladsl.model.HttpRequest
 import scala.concurrent.ExecutionContext.Implicits.global
 import akka.stream.ActorMaterializer
+import akka.actor.{ActorRef, ActorSystem}
 import akka.stream.scaladsl._
 import play.api.libs.json.Json
 
@@ -18,6 +19,8 @@ object Main extends App{
 
 
   override def main(args: Array[String]) {
+    implicit val system = ActorSystem()
+
 
     /*val client = GremlinClient.connect()
 
@@ -25,7 +28,7 @@ object Main extends App{
     client ! GremlinClient.buildRequest("g.V(323600).valueMap()")*/
 
     println("create client")
-    val client = new ESClient()
+    val client = new ESClient(system = system)
 
     /*client.indexJs("test","raw", UUID.randomUUID().toString, Json.obj(
       "author" -> "Corey Auger",
