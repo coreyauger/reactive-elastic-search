@@ -82,7 +82,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
         case OK => Unmarshal(r.entity).to[String]
         case Created => Unmarshal(r.entity).to[String]
         case _ => Unmarshal(r.entity).to[String].flatMap { entity =>
-          val error = s"[ERROR] - Core HTTP request failed with status code (${r.status}) and entity '$entity'"
+          val error = s"[ERROR] - HTTP request failed with status code (${r.status}) and entity '$entity'"
           println(error)
           Future.failed(new IOException(error))
         }
@@ -134,7 +134,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     this.index(index._index, index._type, index._id, json.toString, params)
 
   def index(index: String, `type`: String, id: String, json: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] = {
-    val uri = List(index, `type`, id).mkString("/","/","")
+    val uri = List(index, `type`, id).filter(_ != "").mkString("/","/","")
     api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
   }
 
@@ -143,7 +143,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     this.delete(index._index, index._type, index._id, params)
 
   def delete(index: String, `type`: String = "", id: String = "", params: Map[String, String] = Map.empty[String, String]):Future[ES.Ack] = {
-    val uri = List(index, `type`, id).mkString("/","/","")
+    val uri = List(index, `type`, id).filter(_ != "").mkString("/","/","")
     api[ES.Ack](mkRequest(RequestBuilding.Delete, uri, "", params))
   }
 
