@@ -138,7 +138,7 @@ object ES {
     case class MatchQuery(filed: String, query: String, `type`:MatchType, analyzer: String, operator: MatchOp) extends QueryBase
 
 
-    case class MultiMatchQuery
+    //case class MultiMatchQuery
 
   }
 
