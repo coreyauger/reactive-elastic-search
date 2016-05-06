@@ -106,25 +106,23 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   def mkRequest(requestBuilder: RequestBuilding#RequestBuilder, url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty) =
     requestBuilder(url + queryString(queryParamsMap), mkEntity(body))
 
-  def queryString(p:Map[String, String]) =
-    p.map(x => s"${x._1}=${URLEncoder.encode(x._2,"UTF-8")}").mkString("?","&","")
+  def queryString(p:Map[String, String]):String =
+    p.headOption.map(_ => "?").getOrElse("") + p.map(x => s"${x._1}=${URLEncoder.encode(x._2,"UTF-8")}").mkString("&")
 
   def api[T <: ES.ESResponse](req: HttpRequest)(implicit fjs: Reads[T]):Future[T] = request(req).map(s => fjs.reads(Json.parse(s)).get )
 
   def health(params: Map[String, String] = Map.empty[String, String]):Future[ES.Health] =
-    api[ES.Health](HttpRequest(uri = s"/_cluster/health${queryString(params)}"))
+    api[ES.Health](mkRequest(RequestBuilding.Get, "/_cluster/health", "", params))
 
   def search(index: String = "", `type`: String = "", body: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.Search] = {
-    val uri = List(index, `type`, "_search").mkString("/","/","") + queryString(params)
+    val uri = List(index, `type`, "_search").mkString("/","/","")
     println(body.toString)
-    val req = mkRequest(RequestBuilding.Post, uri, body.toString, params)
-    api[ES.Search](req)
+    api[ES.Search](mkRequest(RequestBuilding.Post, uri, body.toString, params))
   }
 
   def searchLite(index: String = "", `type`: String = "", query: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.Search] = {
-    val uri = List(index, `type`, "_search").mkString("/","/","") + queryString(params + ("q" -> query))
-    val req = mkRequest(RequestBuilding.Get, uri, "", params)
-    api[ES.Search](req)
+    val uri = List(index, `type`, "_search").mkString("/","/","")
+    api[ES.Search](mkRequest(RequestBuilding.Get, uri, "", params))
   }
 
   // TODO: what about custom mappings...
@@ -137,8 +135,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
   def index(index: String, `type`: String, id: String, json: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] = {
     val uri = List(index, `type`, id).mkString("/","/","")
-    val req = mkRequest(RequestBuilding.Put, uri, json, params)
-    api[ES.IndexCreate](req)
+    api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
   }
 
 
@@ -147,21 +144,20 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
   def delete(index: String, `type`: String = "", id: String = "", params: Map[String, String] = Map.empty[String, String]):Future[ES.Ack] = {
     val uri = List(index, `type`, id).mkString("/","/","")
-    val req = mkRequest(RequestBuilding.Delete, uri, "", params)
-    api[ES.Ack](req)
+    api[ES.Ack](mkRequest(RequestBuilding.Delete, uri, "", params))
   }
 
 
   def analyze(analyzer: String = "standard", text: String, params: Map[String, String] = Map.empty[String, String]): Future[ES.Tokens] =
-    api[ES.Tokens](HttpRequest(uri = s"/_analyze${queryString(params ++ Map("analyzer" -> analyzer, "text" -> text))}"))
+    api[ES.Tokens](mkRequest(RequestBuilding.Get, "/_analyze", "", params ++ Map("analyzer" -> analyzer, "text" -> text)))
 
   def mapping(index: String, `type`: String, params: Map[String, String] = Map.empty[String, String]):Future[JsValue] = {
-    val uri = List(index, "_mapping", `type`).mkString("/","/","") + queryString(params)
-    request(HttpRequest(uri = uri)).map(x => Json.parse(x))
+    val uri = List(index, "_mapping", `type`).mkString("/","/","")
+    request(mkRequest(RequestBuilding.Get, uri, "", params)).map(x => Json.parse(x))
   }
 
   def bulk(index: String = "", `type`: String, bulk: ES.Bulk.Request, params: Map[String, String] = Map.empty[String, String]):Future[JsValue] = {
-    val uri = List(index, `type`, "_bulk").mkString("/","/","") + queryString(params)
+    val uri = List(index, `type`, "_bulk").mkString("/","/","")
     val req = mkRequest(RequestBuilding.Post, uri, ES.Bulk.FormatJson(bulk), params)
     request(req).map(x => Json.parse(x))
   }

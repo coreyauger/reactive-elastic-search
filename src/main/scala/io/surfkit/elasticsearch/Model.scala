@@ -164,10 +164,17 @@ object ES {
       val and = MatchOp("and")
       val or = MatchOp("or")
     }
-    case class MatchQuery(filed: String, query: String, `type`:MatchType, analyzer: String, operator: MatchOp) extends QueryBase
+    case class MatchQuery(field: String, query: String, `type`:MatchType = MatchType.default, analyzer: String, operator: MatchOp = MatchOp.or) extends QueryBase
 
-
-    //case class MultiMatchQuery
+    case class MultiMatchType(name: String)
+    object MultiMatchType{
+      val best_fields = MultiMatchType("best_fields")
+      val most_fields = MultiMatchType("most_fields")
+      val cross_fields = MultiMatchType("cross_fields")
+      val phrase = MultiMatchType("phrase")
+      val phrase_prefix = MultiMatchType("phrase_prefix")
+    }
+    case class MultiMatchQuery(fields: Set[String], query: String, `type`:MultiMatchType = MultiMatchType.best_fields, tie_breaker: Option[Double]) extends QueryBase
 
   }
 
