@@ -102,6 +102,46 @@ object ES {
   implicit val tokensWrites = Json.writes[Tokens]
   implicit val tokensReads = Json.reads[Tokens]
 
+  object Query{
+    sealed trait Val{
+      def value: Any
+    }
+    case class StringVal(value: String) extends Val
+    case class IntVal(value: Int) extends Val
+    case class DoubleVal(value: String) extends Val
+    case class BooleanVal(value: Boolean) extends Val
+
+    sealed trait QueryBase
+    case class TermQuery(name: String, value:Val, boost: Option[Double]) extends QueryBase
+
+    case class Clause(clause: String)
+    object Clause{
+      val must = Clause("must")
+      val should = Clause("should")
+      val must_not = Clause("must_not")
+    }
+    case class Condition(clause:Clause, query:Seq[QueryBase])
+    case class BooleanQuery(conditions: Seq[Condition], minimum_should_match: Option[Int], boost:Option[Double]) extends QueryBase
+
+    case class MatchType(name: String)
+    object MatchType{
+      val default = MatchType("")
+      val phrase = MatchType("phrase")
+      val phrase_prefix = MatchType("phrase_prefix")
+    }
+
+    case class MatchOp(op: String)
+    object MatchOp{
+      val and = MatchOp("and")
+      val or = MatchOp("or")
+    }
+    case class MatchQuery(filed: String, query: String, `type`:MatchType, analyzer: String, operator: MatchOp) extends QueryBase
+
+
+    case class MultiMatchQuery
+
+  }
+
   object Bulk{
     import play.api.libs.json._
     import play.api.libs.functional.syntax._
