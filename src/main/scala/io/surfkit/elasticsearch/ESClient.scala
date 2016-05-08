@@ -56,7 +56,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   implicit val materializer = ActorMaterializer()
 
   private[this] val poolClientFlow = Http().cachedHostConnectionPool[Promise[HttpResponse]](host = host, port = port)
-  private[this] val queue = Source.queue[(HttpRequest, Promise[HttpResponse])](10, OverflowStrategy.dropNew)
+  private[this] val queue = Source.queue[(HttpRequest, Promise[HttpResponse])](100000, OverflowStrategy.backpressure)
     .via(poolClientFlow)
     .toMat(Sink.foreach({
       case ((Success(resp), p)) => p.success(resp)
