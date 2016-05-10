@@ -56,7 +56,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   implicit val materializer = ActorMaterializer()
 
   private[this] val poolClientFlow = Http().cachedHostConnectionPool[Promise[HttpResponse]](host = host, port = port)
-  private[this] val queue = Source.queue[(HttpRequest, Promise[HttpResponse])](100000, OverflowStrategy.backpressure)
+  private[this] val queue = Source.queue[(HttpRequest, Promise[HttpResponse])](500000, OverflowStrategy.backpressure)
     .via(poolClientFlow)
     .toMat(Sink.foreach({
       case ((Success(resp), p)) => p.success(resp)
@@ -122,7 +122,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
   def searchLite(index: String = "", `type`: String = "", query: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.Search] = {
     val uri = List(index, `type`, "_search").mkString("/","/","")
-    api[ES.Search](mkRequest(RequestBuilding.Get, uri, "", params))
+    api[ES.Search](mkRequest(RequestBuilding.Get, uri, "", params + ("q" -> query) ))
   }
 
   // TODO: what about custom mappings...
@@ -138,6 +138,16 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
   }
 
+  def putMappingJs(index: String, `type`: String, json: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] =
+    this.putMapping(index, `type`, json.toString, params)
+
+  def putMapping(index: ES.Index, json: JsValue, params: Map[String, String]):Future[ES.IndexCreate] =
+    this.putMapping(index._index, index._type, json.toString, params)
+
+  def putMapping(index: String, `type`: String, json: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] = {
+    val uri = List(index, `type`, "_mapping").filter(_ != "").mkString("/","/","")
+    api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
+  }
 
   def delete(index: ES.Index, params: Map[String, String]):Future[ES.Ack] =
     this.delete(index._index, index._type, index._id, params)
@@ -151,8 +161,8 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   def analyze(analyzer: String = "standard", text: String, params: Map[String, String] = Map.empty[String, String]): Future[ES.Tokens] =
     api[ES.Tokens](mkRequest(RequestBuilding.Get, "/_analyze", "", params ++ Map("analyzer" -> analyzer, "text" -> text)))
 
-  def mapping(index: String, `type`: String, params: Map[String, String] = Map.empty[String, String]):Future[JsValue] = {
-    val uri = List(index, "_mapping", `type`).mkString("/","/","")
+  def getMapping(index: String, `type`: String, params: Map[String, String] = Map.empty[String, String]):Future[JsValue] = {
+    val uri = List(index, `type`, "_mapping").mkString("/","/","")
     request(mkRequest(RequestBuilding.Get, uri, "", params)).map(x => Json.parse(x))
   }
 
