@@ -75,7 +75,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
     val response = queue.offer(request).flatMap(buffered => {
       if (buffered == QueueOfferResult.Enqueued) promise.future
-      else Future.failed(new RuntimeException())
+      else throw new RuntimeException("Failed to queue elastic search request.")
     })
     response.flatMap{ r =>
       r.status match {
@@ -84,7 +84,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
         case _ => Unmarshal(r.entity).to[String].flatMap { entity =>
           val error = s"[ERROR] - HTTP request failed with status code (${r.status}) and entity '$entity'"
           println(error)
-          Future.failed(new IOException(error))
+          throw new IOException(error)
         }
       }
     }
