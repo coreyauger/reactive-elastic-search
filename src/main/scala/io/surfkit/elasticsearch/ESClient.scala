@@ -13,7 +13,7 @@ import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.{QueueOfferResult, IOResult, ActorMaterializer, OverflowStrategy}
+import akka.stream._
 import akka.stream.scaladsl._
 import play.api.libs.json.{JsValue, Reads, Json}
 import scala.concurrent.{Future, Await, Promise}
@@ -55,7 +55,11 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
   implicit val materializer = ActorMaterializer()
 
-  private[this] val poolClientFlow = Http().cachedHostConnectionPool[Promise[HttpResponse]](host = host, port = port)
+  private[this] val decider: Supervision.Decider = {
+    case _ => Supervision.Resume
+  }
+
+  private[this] val poolClientFlow = Http().cachedHostConnectionPool[Promise[HttpResponse]](host = host, port = port).withAttributes(ActorAttributes.supervisionStrategy(decider))
   private[this] val queue = Source.queue[(HttpRequest, Promise[HttpResponse])](500000, OverflowStrategy.backpressure)
     .via(poolClientFlow)
     .toMat(Sink.foreach({
@@ -75,7 +79,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
     val response = queue.offer(request).flatMap(buffered => {
       if (buffered == QueueOfferResult.Enqueued) promise.future
-      else throw new RuntimeException("Failed to queue elastic search request.")
+      else Future.failed(new RuntimeException("Failed to queue elastic search request."))
     })
     response.flatMap{ r =>
       r.status match {
@@ -84,7 +88,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
         case _ => Unmarshal(r.entity).to[String].flatMap { entity =>
           val error = s"[ERROR] - HTTP request failed with status code (${r.status}) and entity '$entity'"
           println(error)
-          throw new IOException(error)
+          Future.failed(new IOException(error))
         }
       }
     }
