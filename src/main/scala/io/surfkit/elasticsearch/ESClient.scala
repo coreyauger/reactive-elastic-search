@@ -53,21 +53,20 @@ object ESClient{
 class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[ActorRef] = None, implicit val system: ActorSystem = ActorSystem()) {
   import ES._
 
-
-  implicit val materializer = ActorMaterializer()
-
   private[this] val decider: Supervision.Decider = {
     case _ => Supervision.Resume
   }
 
-  private[this] val poolClientFlow = Http().cachedHostConnectionPool[Promise[HttpResponse]](host = host, port = port).withAttributes(ActorAttributes.supervisionStrategy(decider))
+  implicit val materializer = ActorMaterializer(ActorMaterializerSettings(system).withSupervisionStrategy(decider))
+
+  private[this] val poolClientFlow = Http().cachedHostConnectionPool[Promise[HttpResponse]](host = host, port = port)
   private[this] val queue = Source.queue[(HttpRequest, Promise[HttpResponse])](500000, OverflowStrategy.backpressure)
     .via(poolClientFlow)
     .toMat(Sink.foreach({
       case ((Success(resp), p)) => p.success(resp)
       case ((Failure(e), p)) => p.failure(e)
     }))(Keep.left)
-    .withAttributes(ActorAttributes.supervisionStrategy(decider))
+
     .run
 
   def shutdown = {
