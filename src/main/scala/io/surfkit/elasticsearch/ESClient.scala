@@ -21,6 +21,7 @@ import scala.util.{Failure, Success}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
+import akka.http.scaladsl.model.headers._
 
 /**
   * Created by coreyauger
@@ -109,7 +110,9 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   def mkEntity(body: String): HttpEntity.Strict = HttpEntity(ContentTypes.`application/json`, body)
 
   def mkRequest(requestBuilder: RequestBuilding#RequestBuilder, url: String, body: String = "", queryParamsMap: Map[String, String] = Map.empty, headersMap: Map[String, String] = Map.empty) =
-    requestBuilder(url + queryString(queryParamsMap), mkEntity(body))
+    requestBuilder(url + queryString(queryParamsMap), mkEntity(body)).withHeaders(headersMap.map{
+      case (n, v) => RawHeader(n, v)
+    }.to[collection.immutable.Seq] )
 
   def queryString(p:Map[String, String]):String =
     p.headOption.map(_ => "?").getOrElse("") + p.map(x => s"${x._1}=${URLEncoder.encode(x._2,"UTF-8")}").mkString("&")
