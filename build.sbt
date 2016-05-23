@@ -2,9 +2,20 @@ import sbt.Keys._
 
 name := "reactive-elastic-search"
 
-version := "1.0"
+version := "0.1-SNAPSHOT"
+
+organization := "io.surfkit"
+
+scalaVersion := "2.11.8"
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
+
+lazy val root = project.in(file(".")).settings(
+  credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
+  resolvers += "NextWave Repo" at "http://maxdevmaster.cloudapp.net:4343/artifactory/nxtwv-maven/",
+  publishTo := Some("NextWave Repo" at "http://maxdevmaster.cloudapp.net:4343/artifactory/nxtwv-maven/")
+)
+
 
 libraryDependencies ++= deps
 
