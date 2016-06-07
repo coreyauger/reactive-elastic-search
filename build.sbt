@@ -2,7 +2,7 @@ import sbt.Keys._
 
 name := "reactive-elastic-search"
 
-version := "0.0.1-SNAPSHOT"
+version := "0.0.1"
 
 organization := "io.surfkit"
 
