@@ -47,6 +47,7 @@ object ES {
     _type: String,
     _id: String,
     _score: Double,
+    sort: Option[Seq[String]],
     _source: JsValue) extends HitBase
   implicit val hitWrites = Json.writes[Hit]
   implicit val hitReads = Json.reads[Hit]
