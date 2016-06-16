@@ -38,7 +38,7 @@ object ES {
   }
 
   trait HitBase extends IndexBase{
-    def _score: Double
+    def _score: Option[Double]
     def _source: JsValue
   }
 
@@ -46,7 +46,7 @@ object ES {
     _index: String,
     _type: String,
     _id: String,
-    _score: Double,
+    _score: Option[Double],
     sort: Option[Seq[String]],
     _source: JsValue) extends HitBase
   implicit val hitWrites = Json.writes[Hit]
