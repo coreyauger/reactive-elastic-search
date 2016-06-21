@@ -87,7 +87,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
         case OK => Unmarshal(r.entity).to[String]
         case Created => Unmarshal(r.entity).to[String]
         case _ => Unmarshal(r.entity).to[String].flatMap { entity =>
-          val error = s"[ERROR] - HTTP request failed with status code (${r.status}) and entity '$entity'"
+          val error = s"[ERROR] - ${host}:${port} HTTP request failed with status code (${r.status}) and entity '$entity'"
           println(error)
           Future.failed(new IOException(error))
         }
@@ -123,7 +123,6 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
   def search(index: String = "", `type`: String = "", body: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.Search] = {
     val uri = List(index, `type`, "_search").mkString("/","/","")
-    println(body.toString)
     api[ES.Search](mkRequest(RequestBuilding.Post, uri, body.toString, params))
   }
 
@@ -153,6 +152,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
 
   def putMapping(index: String, `type`: String, json: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] = {
     val uri = List(index, `type`, "_mapping").filter(_ != "").mkString("/","/","")
+    println(s"PUT MAPPING - ${json}")
     api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
   }
 
