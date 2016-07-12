@@ -87,7 +87,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
         case OK => Unmarshal(r.entity).to[String]
         case Created => Unmarshal(r.entity).to[String]
         case _ => Unmarshal(r.entity).to[String].flatMap { entity =>
-          val error = s"[ERROR] - ${host}:${port} HTTP request failed with status code (${r.status}) and entity '$entity'"
+          val error = s"[ERROR] - ${host}:${port} HTTP request to (${req.uri}) failed with status code (${r.status}) and entity '$entity'"
           println(error)
           Future.failed(new IOException(error))
         }
@@ -154,6 +154,12 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     val uri = List(index, `type`, "_mapping").filter(_ != "").mkString("/","/","")
     println(s"PUT MAPPING - ${json}")
     api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
+  }
+
+  def putIndex(index: String):Future[ES.IndexCreate]  = {
+    val uri = List(index).filter(_ != "").mkString("/","/","")
+    println(s"PUT INDEX - ${index}")
+    api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri))
   }
 
   def delete(index: ES.Index, params: Map[String, String]):Future[ES.Ack] =
