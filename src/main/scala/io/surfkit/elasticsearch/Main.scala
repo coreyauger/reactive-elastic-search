@@ -28,7 +28,7 @@ object Main extends App{
     client ! GremlinClient.buildRequest("g.V(323600).valueMap()")*/
 
     println("create client")
-    val client = new ESClient(system = system)
+    val client = new ESClient(system = system, port = 9400)
 
     /*client.indexJs("test","raw", UUID.randomUUID().toString, Json.obj(
       "author" -> "Corey Auger",
@@ -57,7 +57,7 @@ object Main extends App{
     client.request(HttpRequest(uri = "/_cluster/health?pretty&wait_for_status=green&timeout=5s")).foreach{ response =>
       println(response)
     }*/
-    client.search( body = Json.obj(
+   /* client.search( body = Json.obj(
       "query" -> Json.obj(
         "match" -> Json.obj(
           "content" -> "test"
@@ -65,11 +65,21 @@ object Main extends App{
       )
     )).map{ response =>
       println(response)
+    }.recover(ESClient.reportFailure)*/
+
+    client.search("drive", "node", body = Json.obj(
+     /* "query" -> Json.obj(
+        "match" -> Json.obj(
+          "content" -> "test"
+        )
+      )*/
+    ),Map("size" -> "2", "from" -> "0")).map{ response =>
+      println(response)
     }.recover(ESClient.reportFailure)
 
 
 
-    val bulk = ES.Bulk.Request(
+  /*  val bulk = ES.Bulk.Request(
       Seq(
         ES.Bulk.Entry(ES.Bulk.Action(ES.Bulk.ActionType.index, ES.Index("test","raw",UUID.randomUUID().toString)), Some(
           Json.obj(
@@ -87,8 +97,8 @@ object Main extends App{
         ))
       )
     )
-
-    println(ES.Bulk.FormatJson(bulk))
+*/
+  //  println(ES.Bulk.FormatJson(bulk))
 
     /*client.bulk("test","raw",bulk).map{ response =>
       println(response)

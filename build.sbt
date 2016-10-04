@@ -2,7 +2,7 @@ import sbt.Keys._
 
 name := "reactive-elastic-search"
 
-version := "0.0.5-SNAPSHOT"
+version := "0.0.5"
 
 organization := "io.surfkit"
 
@@ -24,7 +24,7 @@ scalaVersion := "2.11.7"
 fork := true
 
 lazy val deps = {
-  val akkaV = "2.4.4"
+  val akkaV = "2.4.8"
   Seq(
     "com.typesafe.akka"       %% "akka-actor"                 % akkaV,
     "com.typesafe.akka"       %% "akka-http-experimental"     % akkaV,

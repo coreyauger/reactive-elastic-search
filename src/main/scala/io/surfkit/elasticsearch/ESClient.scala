@@ -15,7 +15,7 @@ import akka.http.scaladsl.model.ws._
 import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream._
 import akka.stream.scaladsl._
-import play.api.libs.json.{JsValue, Reads, Json}
+import play.api.libs.json._
 import scala.concurrent.{Future, Await, Promise}
 import scala.util.{Failure, Success}
 import scala.concurrent.duration._
@@ -74,7 +74,7 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   }
 
   def request(req: HttpRequest = HttpRequest(uri = "/")):Future[String] = {
-    println(s"requesting: ${req.uri}")
+    println(s"~requesting: ${req.uri}")
     val promise = Promise[HttpResponse]
     val request = req -> promise
 
@@ -116,7 +116,12 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   def queryString(p:Map[String, String]):String =
     p.headOption.map(_ => "?").getOrElse("") + p.map(x => s"${x._1}=${URLEncoder.encode(x._2,"UTF-8")}").mkString("&")
 
-  def api[T <: ES.ESResponse](req: HttpRequest)(implicit fjs: Reads[T]):Future[T] = request(req).map(s => fjs.reads(Json.parse(s)).get )
+  def api[T <: ES.ESResponse](req: HttpRequest)(implicit fjs: Reads[T]):Future[T] = request(req).map{s => fjs.reads(Json.parse(s)) match{
+    case x:JsSuccess[T] => x.get
+    case x:JsError =>
+      println(s"[ERROR] ES parse error: ${x.errors}")
+      throw new RuntimeException(s"[ERROR] ES parse error: ${x.errors}")
+  } }
 
   def health(params: Map[String, String] = Map.empty[String, String]):Future[ES.Health] =
     api[ES.Health](mkRequest(RequestBuilding.Get, "/_cluster/health", "", params))
