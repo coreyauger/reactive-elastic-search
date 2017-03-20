@@ -136,6 +136,11 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     api[ES.Search](mkRequest(RequestBuilding.Get, uri, "", params + ("q" -> query) ))
   }
 
+  def get(index: String = "", `type`: String = "", id: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexLookup] = {
+    val uri = List(index, `type`, id).mkString("/","/","")
+    api[ES.IndexLookup](mkRequest(RequestBuilding.Get, uri, "", params ))
+  }
+
   // TODO: what about custom mappings...
   // https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html
   def indexJs(index: String, `type`: String, id: String, json: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] =

@@ -90,6 +90,17 @@ object ES {
   implicit val indexWrites = Json.writes[Index]
   implicit val indexReads = Json.reads[Index]
 
+  case class IndexLookup(
+      _index: String,
+      _type: String,
+      _id: String,
+      _version: Double,
+      found: Boolean,
+      _source: JsValue
+    ) extends IndexBase with ESResponse
+  implicit val indexLookupWrites = Json.writes[IndexLookup]
+  implicit val indexLookupReads = Json.reads[IndexLookup]
+
   case class Token(
     token: String,
     start_offset: Int,
