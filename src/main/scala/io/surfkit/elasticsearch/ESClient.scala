@@ -116,10 +116,13 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
   def queryString(p:Map[String, String]):String =
     p.headOption.map(_ => "?").getOrElse("") + p.map(x => s"${x._1}=${URLEncoder.encode(x._2,"UTF-8")}").mkString("&")
 
-  def api[T <: ES.ESResponse](req: HttpRequest)(implicit fjs: Reads[T]):Future[T] = request(req).map{s => fjs.reads(Json.parse(s)) match{
+  def api[T <: ES.ESResponse](req: HttpRequest)(implicit fjs: Reads[T]):Future[T] = request(req).map{s =>
+
+    fjs.reads(Json.parse(s)) match{
     case x:JsSuccess[T] => x.get
     case x:JsError =>
-      println(s"[ERROR] ES parse error: ${x.errors}")
+      println(s"[ERROR] ES parse json: for request(${req}) ${s}")
+      println(s"[ERROR] ES parse error for request(${req}): ${x.errors}")
       throw new RuntimeException(s"[ERROR] ES parse error: ${x.errors}")
   } }
 
@@ -154,22 +157,21 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
   }
 
-  def putMappingJs(index: String, `type`: String, json: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] =
+  def putMappingJs(index: String, `type`: String, json: JsValue, params: Map[String, String] = Map.empty[String, String]):Future[ES.Ack] =
     this.putMapping(index, `type`, json.toString, params)
 
-  def putMapping(index: ES.Index, json: JsValue, params: Map[String, String]):Future[ES.IndexCreate] =
+  def putMapping(index: ES.Index, json: JsValue, params: Map[String, String]):Future[ES.Ack] =
     this.putMapping(index._index, index._type, json.toString, params)
 
-  def putMapping(index: String, `type`: String, json: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.IndexCreate] = {
+  def putMapping(index: String, `type`: String, json: String, params: Map[String, String] = Map.empty[String, String]):Future[ES.Ack] = {
     val uri = List(index, `type`, "_mapping").filter(_ != "").mkString("/","/","")
     println(s"PUT MAPPING - ${json}")
-    api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri, json, params))
+    api[ES.Ack](mkRequest(RequestBuilding.Put, uri, json, params))
   }
 
-  def putIndex(index: String):Future[ES.IndexCreate]  = {
+  def putIndex(index: String):Future[ES.Ack]  = {
     val uri = List(index).filter(_ != "").mkString("/","/","")
-    println(s"PUT INDEX - ${index}")
-    api[ES.IndexCreate](mkRequest(RequestBuilding.Put, uri))
+    api[ES.Ack](mkRequest(RequestBuilding.Put, uri))
   }
 
   def delete(index: ES.Index, params: Map[String, String]):Future[ES.Ack] =
