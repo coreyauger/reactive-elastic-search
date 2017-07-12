@@ -101,6 +101,18 @@ object ES {
   implicit val indexLookupWrites = Json.writes[IndexLookup]
   implicit val indexLookupReads = Json.reads[IndexLookup]
 
+
+  case class Delete(
+        _index: String,
+        _type: String,
+        _id: String,
+        _version: Double,
+        found: Boolean,
+        _shards: Shards
+      ) extends IndexBase with ESResponse
+  implicit val DeleteWrites = Json.writes[Delete]
+  implicit val DeleteReads = Json.reads[Delete]
+
   case class Token(
     token: String,
     start_offset: Int,

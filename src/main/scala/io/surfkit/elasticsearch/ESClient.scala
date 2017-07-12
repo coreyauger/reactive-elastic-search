@@ -174,12 +174,12 @@ class ESClient(host:String = "localhost", port: Int = 9200, responder:Option[Act
     api[ES.Ack](mkRequest(RequestBuilding.Put, uri))
   }
 
-  def delete(index: ES.Index, params: Map[String, String]):Future[ES.Ack] =
+  def delete(index: ES.Index, params: Map[String, String]):Future[ES.Delete] =
     this.delete(index._index, index._type, index._id, params)
 
-  def delete(index: String, `type`: String = "", id: String = "", params: Map[String, String] = Map.empty[String, String]):Future[ES.Ack] = {
+  def delete(index: String, `type`: String = "", id: String = "", params: Map[String, String] = Map.empty[String, String]):Future[ES.Delete] = {
     val uri = List(index, `type`, id).filter(_ != "").mkString("/","/","")
-    api[ES.Ack](mkRequest(RequestBuilding.Delete, uri, "", params))
+    api[ES.Delete](mkRequest(RequestBuilding.Delete, uri, "", params))
   }
 
 
