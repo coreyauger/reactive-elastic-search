@@ -12,8 +12,8 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 
 lazy val root = project.in(file(".")).settings(
   credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
-  resolvers += "NextWave Repo" at "http://maxdevmaster.cloudapp.net:4343/artifactory/nxtwv-maven/",
-  publishTo := Some("NextWave Repo" at "http://maxdevmaster.cloudapp.net:4343/artifactory/nxtwv-maven/")
+  resolvers += "NextWave Repo" at "https://repository.conversant.im/artifactory/nxtwv-maven/",
+  publishTo := Some("NextWave Repo" at "https://repository.conversant.im/artifactory/nxtwv-maven/")
 )
 
 
