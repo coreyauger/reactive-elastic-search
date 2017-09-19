@@ -42,12 +42,38 @@ object ES {
     def _source: JsValue
   }
 
+  case class InnerHits(`type`:String, hits: Hits ) extends ESResponse
+  implicit val innerHitsFormat: Format[InnerHits] =
+    new Format[InnerHits] {
+      override def reads(json: JsValue): JsResult[InnerHits] = json match {
+        case j: JsObject =>
+          val ret = j.fields.map {
+            case (name, hits) =>
+              hits.validate[WrappedHits] match {
+                case JsSuccess(validHits, _) =>
+                  JsSuccess(InnerHits(name, validHits.hits))
+                case e: JsError =>
+                  return e
+              }
+          }.headOption.getOrElse(JsError("Could not parse Inner Hit"))
+          println(s"ret: ${ret}")
+          ret
+        case _ =>
+          JsError("Invalid JSON type")
+      }
+
+      override def writes(o: InnerHits): JsValue = Json.toJson(o)
+    }
+
   case class Hit(
     _index: String,
     _type: String,
     _id: String,
     _score: Option[Double],
+    _routing: Option[String],
+    _parent: Option[String],
     sort: Option[Seq[JsValue]],
+    inner_hits: Option[InnerHits],
     _source: JsValue) extends HitBase
   implicit val hitWrites = Json.writes[Hit]
   implicit val hitReads = Json.reads[Hit]
@@ -58,6 +84,12 @@ object ES {
     max_score: Option[Double]) extends ESResponse
   implicit val hitsWrites = Json.writes[Hits]
   implicit val hitsReads = Json.reads[Hits]
+
+  case class WrappedHits(hits: Hits) extends ESResponse
+  implicit val wrappedhitsWrites = Json.writes[WrappedHits]
+  implicit val wrappedhitsReads = Json.reads[WrappedHits]
+
+
 
   case class Shards(
     failed: Int,
