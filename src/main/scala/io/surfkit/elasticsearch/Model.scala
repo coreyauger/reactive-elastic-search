@@ -47,7 +47,7 @@ object ES {
     new Format[InnerHits] {
       override def reads(json: JsValue): JsResult[InnerHits] = json match {
         case j: JsObject =>
-          val ret = j.fields.map {
+          j.fields.map {
             case (name, hits) =>
               hits.validate[WrappedHits] match {
                 case JsSuccess(validHits, _) =>
@@ -56,8 +56,6 @@ object ES {
                   return e
               }
           }.headOption.getOrElse(JsError("Could not parse Inner Hit"))
-          println(s"ret: ${ret}")
-          ret
         case _ =>
           JsError("Invalid JSON type")
       }
