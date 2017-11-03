@@ -37,9 +37,14 @@ object ES {
     def _id: String
   }
 
-  trait HitBase extends IndexBase{
+  // no longer inherit IndexBase due to bug in ES
+  //https://github.com/elastic/elasticsearch/issues/18091
+  trait HitBase{
     def _score: Option[Double]
     def _source: JsValue
+    def _index: Option[String]
+    def _type: String
+    def _id: String
   }
 
   case class InnerHits(`type`:String, hits: Hits ) extends ESResponse
@@ -64,7 +69,7 @@ object ES {
     }
 
   case class Hit(
-    _index: String,
+    _index: Option[String],   //https://github.com/elastic/elasticsearch/issues/18091
     _type: String,
     _id: String,
     _score: Option[Double],
