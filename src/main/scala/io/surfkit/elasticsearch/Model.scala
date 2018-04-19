@@ -93,6 +93,43 @@ object ES {
   implicit val wrappedhitsReads = Json.reads[WrappedHits]
 
 
+  case class Bucket(
+    key: String,
+    doc_count: Int,
+    aggregate: Map[String, Hits]) extends ESResponse
+  implicit val bucketWrites = new Writes[Bucket] {
+    override def writes(bucket: Bucket): JsValue = {
+      val baseObj = Json.obj(
+        "key" -> bucket.key,
+        "doc_count" -> bucket.doc_count
+      )
+      bucket.aggregate.toSeq.foldLeft(baseObj) { case (obj, e) =>
+        obj ++ Json.obj(
+          e._1 -> Json.obj("hits" -> e._2)
+        )
+      }
+    }
+  }
+  implicit val bucketReads = new Reads[Bucket] {
+    def reads(js: JsValue): JsResult[Bucket] = js match {
+      case o: JsObject => JsSuccess(
+        Bucket(
+          (js \ "key").as[String],
+          (js \ "doc_count").as[Int],
+          (o.keys - "key" - "doc_count").map { key =>
+            key -> (js \ key \ "hits").as[Hits]
+          }.toMap
+        ))
+      case _ => JsError(s"[ERROR] Bucket json is not an Object: $js")
+    }
+  }
+
+  case class Aggregation(
+    doc_count_error_upper_bound: Int,
+    sum_other_doc_count: Int,
+    buckets: Seq[Bucket]) extends ESResponse
+  implicit val aggregationWrites = Json.writes[Aggregation]
+  implicit val aggregationReads = Json.reads[Aggregation]
 
   case class Shards(
     failed: Int,
@@ -103,6 +140,7 @@ object ES {
 
   case class Search(
     hits: Hits,
+    aggregations: Option[Map[String, Aggregation]],
     took: Int,
     _shards: Shards,
     timed_out: Boolean) extends ESResponse
